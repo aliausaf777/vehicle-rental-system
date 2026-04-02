@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/generated-image-removebg-preview.png') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment — Elite Auto Rentals</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<nav class="nav scrolled" id="main-nav">
+  <div class="nav__inner">
+    <a href="/" class="nav__logo">Elite <em>Auto</em></a>
+    <div class="nav__links">
+      <a href="/">Fleet</a><a href="/bookings">Bookings</a>
+      <a href="/logout" class="danger">Sign Out</a>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}<div class="flash-wrap">{% for m in messages %}
+    <div class="flash error" style="padding-left:48px">{{ m }}</div>
+  {% endfor %}</div>{% endif %}
+{% endwith %}
+
+<div style="background:var(--bg2)">
+  <div class="page">
+    <div class="pg-header" style="background:transparent">
+      <p class="pg-eye">Final Step</p>
+      <h1>Complete <span>Payment</span></h1>
+    </div>
+  </div>
+</div>
+
+<div style="background:var(--bg)">
+  <div class="page">
+    <div class="pay-layout">
+
+      <!-- Payment form -->
+      <div>
+        <div class="pay-card">
+          <div class="pay-card__head"><h2>Payment Details</h2></div>
+          <div class="pay-card__body">
+            <form method="POST" action="/confirm_payment">
+              <input type="hidden" name="rental_id" value="{{ rental.id }}">
+              <input type="hidden" name="payment_method" id="payMethod" value="card">
+
+              <div class="pay-tabs">
+                <button type="button" class="pay-tab active" onclick="tab(this,'card')">💳 Card</button>
+                <button type="button" class="pay-tab" onclick="tab(this,'upi')">📱 UPI</button>
+                <button type="button" class="pay-tab" onclick="tab(this,'netbank')">🏦 Net Banking</button>
+              </div>
+
+              <!-- CARD -->
+              <div id="sec-card">
+                <div class="pay-lbl">Card Information</div>
+                <div class="field">
+                  <label class="label">Cardholder Name</label>
+                  <input class="input" type="text" name="card_name" placeholder="As on card">
+                </div>
+                <div class="field">
+                  <label class="label">Card Number</label>
+                  <div class="card-wrap">
+                    <input class="input" type="text" id="cardNum" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19">
+                    <span class="card-ico">💳</span>
+                  </div>
+                </div>
+                <div class="row2">
+                  <div class="field">
+                    <label class="label">Expiry</label>
+                    <input class="input" type="text" name="expiry" id="expiryInput" placeholder="MM / YY" maxlength="7">
+                  </div>
+                  <div class="field">
+                    <label class="label">CVV</label>
+                    <div class="card-wrap">
+                      <input class="input" type="password" name="cvv" placeholder="•••" maxlength="4">
+                      <span class="card-ico">🔒</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="pay-lbl">Billing Details</div>
+                <div class="field">
+                  <label class="label">Full Name</label>
+                  <input class="input" type="text" name="billing_name" value="{{ session.get('name','') }}">
+                </div>
+                <div class="row2">
+                  <div class="field"><label class="label">City</label><input class="input" type="text" name="city" placeholder="Mumbai"></div>
+                  <div class="field"><label class="label">PIN Code</label><input class="input" type="text" name="pin" placeholder="400001" maxlength="6"></div>
+                </div>
+              </div>
+
+              <!-- UPI -->
+              <div id="sec-upi" style="display:none">
+                <div class="pay-lbl">UPI Payment</div>
+                <div class="field">
+                  <label class="label">UPI ID</label>
+                  <input class="input" type="text" name="upi_id" placeholder="yourname@upi">
+                </div>
+                <div style="margin-top:14px;padding:14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r);font-size:.875rem;color:var(--muted);line-height:1.7">
+                  A payment request will be sent to your UPI app. Complete within 5 minutes to confirm booking.
+                </div>
+              </div>
+
+              <!-- NET BANKING -->
+              <div id="sec-netbank" style="display:none">
+                <div class="pay-lbl">Select Your Bank</div>
+                <div class="field">
+                  <label class="label">Bank</label>
+                  <select class="select" name="bank">
+                    <option value="">— Select bank —</option>
+                    <option>State Bank of India</option><option>HDFC Bank</option>
+                    <option>ICICI Bank</option><option>Axis Bank</option>
+                    <option>Kotak Mahindra Bank</option><option>Yes Bank</option>
+                    <option>Punjab National Bank</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="margin-top:24px">
+                <button type="submit" class="btn btn-accent btn-lg btn-full">
+                  Pay ₹{{ "{:,.0f}".format(rental.total|float) }} →
+                </button>
+              </div>
+              <div class="secure">🔒 256-bit SSL encrypted · Secure checkout</div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order summary -->
+      <div>
+        <div class="order-card">
+          <img src="{{ url_for('static', filename='images/' + (car.image if car.image else 'default-car.jpg')) }}"
+               alt="{{ car.brand }} {{ car.model }}">
+          <div class="order-body">
+            <p class="order-make">{{ car.brand }}</p>
+            <p class="order-name">{{ car.model }}</p>
+            <div class="order-line"><span>Pickup</span><span>{{ rental.pickup_date }}</span></div>
+            <div class="order-line"><span>Return</span><span>{{ rental.return_date }}</span></div>
+            <div class="order-line"><span>Duration</span><span id="durText">—</span></div>
+            <div class="order-line"><span>Daily rate</span><span>₹{{ car.price_per_day }}</span></div>
+            <div class="order-line"><span>Insurance</span><span style="color:var(--green);font-weight:600">Included ✓</span></div>
+            <div class="order-total">
+              <span>Total Due</span>
+              <span>₹{{ "{:,.0f}".format(rental.total|float) }}</span>
+            </div>
+            <p style="margin-top:12px;font-size:.8125rem;color:var(--muted);line-height:1.65;padding:12px;background:var(--bg);border-radius:var(--r);border:1px solid var(--border)">
+              🔑 Booking confirmed instantly. Confirmation sent to your email.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="page"><div class="footer__inner">
+  <span class="footer__logo">Elite <em>Auto</em></span>
+  <div class="footer__links"><a href="/">Fleet</a><a href="/bookings">Bookings</a></div>
+  <span class="footer__copy">© 2025 Elite Auto Rentals</span>
+</div></div></footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+function tab(el, s) {
+  document.querySelectorAll('.pay-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['card','upi','netbank'].forEach(x=>document.getElementById('sec-'+x).style.display=x===s?'block':'none');
+  document.getElementById('payMethod').value=s;
+}
+// Duration calc
+const pu='{{ rental.pickup_date }}',re='{{ rental.return_date }}';
+if(pu&&re){const d=Math.floor((new Date(re)-new Date(pu))/86400000)+1;document.getElementById('durText').textContent=d+' day'+(d>1?'s':'');}
+</script>
+
+</body>
+</html>

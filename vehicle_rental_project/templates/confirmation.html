@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/generated-image-removebg-preview.png') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmed — Elite Auto Rentals</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<nav class="nav scrolled" id="main-nav">
+  <div class="nav__inner">
+    <a href="/" class="nav__logo">Elite <em>Auto</em></a>
+    <div class="nav__links">
+      <a href="/">Fleet</a><a href="/bookings">Bookings</a>
+      <a href="/logout" class="danger">Sign Out</a>
+    </div>
+  </div>
+</nav>
+
+<div class="confirm-wrap">
+  <div style="width:100%;max-width:560px">
+    <div class="confirm-card">
+      <div class="confirm-icon">✅</div>
+      <h1>Booking Confirmed!</h1>
+      <p>Your reservation has been successfully placed. Get ready for an exceptional drive.</p>
+
+      <div class="ref-tag">
+        Booking Reference: <strong>#EAR-{{ rental.id }}</strong>
+      </div>
+
+      <div class="confirm-details">
+        <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px">
+          <img src="{{ url_for('static', filename='images/' + (car.image if car.image else 'default-car.jpg')) }}"
+               style="width:72px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
+          <div>
+            <p style="font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">{{ car.brand }}</p>
+            <p style="font-family:var(--font-d);font-size:1rem;font-weight:700;color:var(--ink)">{{ car.model }}</p>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <p style="font-size:.6875rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Pickup</p>
+            <p style="font-weight:600;color:var(--ink);margin-top:2px">{{ rental.pickup_date }}</p>
+          </div>
+          <div>
+            <p style="font-size:.6875rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Return</p>
+            <p style="font-weight:600;color:var(--ink);margin-top:2px">{{ rental.return_date }}</p>
+          </div>
+          <div>
+            <p style="font-size:.6875rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Total Paid</p>
+            <p style="font-family:var(--font-d);font-weight:700;color:var(--accent);font-size:1.125rem;margin-top:2px">₹{{ "{:,.0f}".format(rental.total|float) }}</p>
+          </div>
+          <div>
+            <p style="font-size:.6875rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Payment</p>
+            <p style="font-weight:600;color:var(--ink);margin-top:2px;text-transform:capitalize">{{ rental.payment_method or 'Card' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:center">
+        <a href="/bookings" class="btn btn-accent btn-lg">View My Bookings</a>
+        <a href="/" class="btn btn-ghost">Browse Fleet</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="page"><div class="footer__inner">
+  <span class="footer__logo">Elite <em>Auto</em></span>
+  <div class="footer__links"><a href="/">Fleet</a><a href="/bookings">Bookings</a></div>
+  <span class="footer__copy">© 2025 Elite Auto Rentals</span>
+</div></div></footer>
+
+</body>
+</html>

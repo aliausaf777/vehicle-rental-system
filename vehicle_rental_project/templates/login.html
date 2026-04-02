@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/generated-image-removebg-preview.png') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Elite Auto Rentals</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<div class="auth-wrap">
+
+  <!-- LEFT: Warm dark brand panel -->
+  <div class="auth-side">
+    <div class="auth-side__grid"></div>
+    <div class="auth-side__glow"></div>
+    <span class="auth-side__logo">Elite <em>Auto</em></span>
+    <div style="position:relative;z-index:1">
+      <h1 class="auth-side__hero">Drive<br><em>Beyond.</em></h1>
+      <p class="auth-side__tag">Handpicked luxury vehicles.<br>Seamless booking. Zero hassle.</p>
+    </div>
+    <p class="auth-side__foot">© 2025 Elite Auto Rentals</p>
+  </div>
+
+  <!-- RIGHT: Light form panel -->
+  <div class="auth-form">
+    <div class="auth-inner">
+
+      <h2 class="auth-title">Welcome back</h2>
+      <p class="auth-sub">
+        No account yet? <a href="/register">Create one free →</a>
+      </p>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}{% for msg in messages %}
+          <div class="flash error" style="margin-bottom:18px;border-radius:4px;padding:11px 14px;">{{ msg }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+
+      <form method="POST">
+        <div class="field">
+          <label class="label" for="email">Email address</label>
+          <input class="input" type="text" id="email" name="email"
+                 placeholder="you@example.com" required autocomplete="username">
+        </div>
+        <div class="field">
+          <label class="label" for="password">Password</label>
+          <input class="input" type="password" id="password" name="password"
+                 placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <div class="field">
+          <label class="label" for="role">Signing in as</label>
+          <select class="select" id="role" name="role">
+            <option value="customer">Customer</option>
+            <option value="admin">Administrator</option>
+          </select>
+        </div>
+        <div style="margin-top:24px">
+          <button type="submit" class="btn btn-accent btn-lg btn-full">Sign In →</button>
+        </div>
+      </form>
+
+    </div>
+    <p class="auth-foot">Elite Auto Rentals · All rights reserved</p>
+  </div>
+
+</div>
+
+</body>
+</html>

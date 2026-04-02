@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/generated-image-removebg-preview.png') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile — Elite Auto Rentals</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<nav class="nav scrolled" id="main-nav">
+  <div class="nav__inner">
+    <a href="/" class="nav__logo">Elite <em>Auto</em></a>
+    <div class="nav__links">
+      <a href="/">Fleet</a><a href="/bookings">Bookings</a>
+      <a href="/profile" class="active">Profile</a>
+      <a href="/logout" class="danger">Sign Out</a>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}<div class="flash-wrap">{% for m in messages %}
+    <div class="flash success" style="padding-left:48px">{{ m }}</div>
+  {% endfor %}</div>{% endif %}
+{% endwith %}
+
+<div style="background:var(--bg2)">
+  <div class="page">
+    <div class="pg-header" style="background:transparent">
+      <p class="pg-eye">Account</p>
+      <h1>My <span>Profile</span></h1>
+    </div>
+  </div>
+</div>
+
+<div style="background:var(--bg)">
+  <div class="page">
+    <div class="profile-layout">
+
+      <!-- Left: Profile card -->
+      <div>
+        <div class="profile-card">
+          <div class="profile-card__top">
+            <div class="p-avatar">{{ customer.name[0]|upper }}</div>
+            <p class="p-name">{{ customer.name }}</p>
+            <p class="p-email">{{ customer.email }}</p>
+            <span class="p-role">Customer</span>
+          </div>
+          <div class="profile-card__stats">
+            <div class="p-stat"><span class="p-stat-l">Total Bookings</span><span class="p-stat-v">{{ stats.total }}</span></div>
+            <div class="p-stat"><span class="p-stat-l">Confirmed</span><span class="p-stat-v">{{ stats.confirmed }}</span></div>
+            <div class="p-stat"><span class="p-stat-l">Completed</span><span class="p-stat-v">{{ stats.completed }}</span></div>
+            <div class="p-stat"><span class="p-stat-l">Total Spent</span><span class="p-stat-v text-accent">₹{{ "{:,.0f}".format(stats.spent|float) }}</span></div>
+            <div class="p-stat"><span class="p-stat-l">Member Since</span><span class="p-stat-v">{{ customer.created_at.strftime('%b %Y') if customer.created_at else '2025' }}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Edit forms -->
+      <div>
+        <!-- Edit profile -->
+        <div class="edit-card">
+          <div class="edit-card__head">
+            <span class="edit-card__title">Personal Information</span>
+          </div>
+          <div class="edit-card__body">
+            <form method="POST" action="/update_profile">
+              <div class="row2">
+                <div class="field">
+                  <label class="label">Full Name</label>
+                  <input class="input" type="text" name="name" value="{{ customer.name }}" required>
+                </div>
+                <div class="field">
+                  <label class="label">Phone</label>
+                  <input class="input" type="tel" name="phone" value="{{ customer.phone or '' }}" placeholder="+91 98765 43210">
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">Email Address</label>
+                <input class="input" type="email" name="email" value="{{ customer.email }}" required>
+              </div>
+              <div class="mt4">
+                <button type="submit" class="btn btn-accent">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Change password -->
+        <div class="edit-card" style="margin-top:20px">
+          <div class="edit-card__head">
+            <span class="edit-card__title">Change Password</span>
+          </div>
+          <div class="edit-card__body">
+            <form method="POST" action="/change_password">
+              <div class="field">
+                <label class="label">Current Password</label>
+                <input class="input" type="password" name="current" placeholder="••••••••" required>
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label class="label">New Password</label>
+                  <input class="input" type="password" name="new_pass" id="np" placeholder="Min. 6 chars" required>
+                </div>
+                <div class="field">
+                  <label class="label">Confirm New</label>
+                  <input class="input" type="password" name="confirm" id="nc" placeholder="Repeat" required>
+                </div>
+              </div>
+              <div class="mt4">
+                <button type="submit" class="btn btn-ghost">Update Password</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Recent bookings summary -->
+        {% if recent_bookings %}
+        <div class="edit-card" style="margin-top:20px">
+          <div class="edit-card__head">
+            <span class="edit-card__title">Recent Bookings</span>
+            <a href="/bookings" class="btn btn-ghost btn-sm">View All</a>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead><tr><th>Vehicle</th><th>Dates</th><th>Total</th><th>Status</th></tr></thead>
+              <tbody>
+                {% for b in recent_bookings %}
+                <tr>
+                  <td class="td-car"><p>{{ b.brand }}</p><p>{{ b.model }}</p></td>
+                  <td style="font-size:.8125rem">{{ b.pickup_date }} → {{ b.return_date }}</td>
+                  <td class="td-total">₹{{ "{:,.0f}".format(b.total|float) }}</td>
+                  <td>
+                    {% if b.status == 'confirmed' %}<span class="badge badge-confirmed">Confirmed</span>
+                    {% elif b.status == 'completed' %}<span class="badge badge-completed">Completed</span>
+                    {% elif b.status == 'cancelled' %}<span class="badge badge-cancelled">Cancelled</span>
+                    {% else %}<span class="badge badge-pending">Pending</span>{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><div class="page"><div class="footer__inner">
+  <span class="footer__logo">Elite <em>Auto</em></span>
+  <div class="footer__links"><a href="/">Fleet</a><a href="/bookings">Bookings</a><a href="/profile">Profile</a></div>
+  <span class="footer__copy">© 2025 Elite Auto Rentals</span>
+</div></div></footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

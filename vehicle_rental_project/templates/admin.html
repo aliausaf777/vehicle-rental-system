@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/generated-image-removebg-preview.png') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Elite Auto Rentals</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<nav class="nav scrolled" id="main-nav">
+  <div class="nav__inner">
+    <a href="/admin" class="nav__logo">Elite <em>Auto</em> <span style="font-size:.75rem;font-weight:500;color:var(--muted);margin-left:8px">Admin</span></a>
+    <div class="nav__links">
+      <a href="/admin" class="active">Dashboard</a>
+      <a href="/logout" class="danger">Sign Out</a>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}<div class="flash-wrap">{% for m in messages %}
+    <div class="flash success" style="padding-left:48px">{{ m }}</div>
+  {% endfor %}</div>{% endif %}
+{% endwith %}
+
+<div style="background:var(--bg2)">
+  <div class="page">
+    <div class="pg-header" style="background:transparent">
+      <p class="pg-eye">Administration</p>
+      <h1>Admin <span>Dashboard</span></h1>
+    </div>
+  </div>
+</div>
+
+<div style="background:var(--bg);min-height:80vh">
+  <div class="page" style="padding-bottom:84px">
+
+    <!-- Stats -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <p class="stat-n">{{ total_cars }}</p><p class="stat-l">Vehicles in fleet</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-n">{{ total_customers }}</p><p class="stat-l">Registered customers</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-n">{{ total_bookings }}</p><p class="stat-l">Total bookings</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-n accent">₹{{ "{:,.0f}".format(revenue|float) if revenue else "0" }}</p>
+        <p class="stat-l">Total revenue</p>
+      </div>
+    </div>
+
+    <!-- ═══ EDIT CAR MODAL ═══ -->
+    <div id="editModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(22,22,20,.6);backdrop-filter:blur(4px);overflow-y:auto;padding:40px 20px">
+      <div style="max-width:800px;margin:0 auto;background:var(--bg2);border-radius:var(--r-lg);box-shadow:var(--sh-lg);overflow:hidden">
+        <div style="padding:22px 32px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <p style="font-size:.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:3px">Fleet Management</p>
+            <h2 id="modalCarTitle" style="font-family:var(--font-d);font-size:1.25rem;font-weight:700;color:var(--ink)">Edit Vehicle</h2>
+          </div>
+          <button onclick="closeEditModal()" style="width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:1rem;color:var(--muted);transition:all .15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕</button>
+        </div>
+        <form id="editCarForm" method="POST" action="">
+          <div style="padding:26px 32px">
+
+            <!-- Cover Image -->
+            <p style="font-size:.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Cover Image</p>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:22px">
+              <div style="width:120px;height:80px;border-radius:var(--r-md);border:1.5px solid var(--border);overflow:hidden;flex-shrink:0;background:var(--bg3)">
+                <img id="coverPreview" src="" alt="" style="width:100%;height:100%;object-fit:cover">
+              </div>
+              <div style="flex:1">
+                <label class="label">Image filename <span style="color:var(--muted2);font-weight:400">— must be in static/images/</span></label>
+                <input class="input" type="text" name="image" id="editImage" placeholder="bmwm6.jpg" oninput="updateCoverPreview(this.value)">
+              </div>
+            </div>
+
+            <!-- Gallery -->
+            <p style="font-size:.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Gallery Images</p>
+            <div id="galleryPreviews" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;min-height:0"></div>
+            <div class="field" style="margin-bottom:22px">
+              <label class="label">Additional images <span style="color:var(--muted2);font-weight:400">— comma-separated filenames</span></label>
+              <input class="input" type="text" name="gallery" id="editGallery" placeholder="interior.jpg, wheels.jpg, rear.jpg" oninput="updateGallery(this.value)">
+            </div>
+
+            <!-- Basic Info -->
+            <p style="font-size:.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Basic Info</p>
+            <div class="add-grid" style="margin-bottom:22px">
+              <div class="field"><label class="label">Brand</label><input class="input" type="text" name="brand" id="editBrand" required></div>
+              <div class="field"><label class="label">Model</label><input class="input" type="text" name="model" id="editModel" required></div>
+              <div class="field"><label class="label">Year</label><input class="input" type="number" name="year" id="editYear" placeholder="2024" min="1990" max="2030"></div>
+              <div class="field"><label class="label">Price / Day (₹)</label><input class="input" type="number" name="price" id="editPrice" min="1" required></div>
+              <div class="field"><label class="label">Category</label>
+                <select class="select" name="category_id" id="editCategory">
+                  <option value="">— Select —</option>
+                  {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                </select>
+              </div>
+              <div class="field"><label class="label">Color</label><input class="input" type="text" name="color" id="editColor" placeholder="Midnight Black"></div>
+            </div>
+
+            <!-- Specs -->
+            <p style="font-size:.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Specifications</p>
+            <div class="add-grid" style="margin-bottom:22px">
+              <div class="field"><label class="label">Seats</label>
+                <select class="select" name="seats" id="editSeats">
+                  <option value="2">2</option><option value="4">4</option><option value="5" selected>5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+                </select>
+              </div>
+              <div class="field"><label class="label">Transmission</label>
+                <select class="select" name="transmission" id="editTransmission">
+                  <option>Automatic</option><option>Manual</option><option>Semi-Automatic</option>
+                </select>
+              </div>
+              <div class="field"><label class="label">Fuel Type</label>
+                <select class="select" name="fuel_type" id="editFuelType">
+                  <option>Petrol</option><option>Diesel</option><option>Electric</option><option>Hybrid</option><option>CNG</option>
+                </select>
+              </div>
+              <div class="field"><label class="label">Mileage Policy</label>
+                <select class="select" name="mileage" id="editMileage">
+                  <option>Unlimited</option><option>200 km/day</option><option>300 km/day</option><option>500 km/day</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <p style="font-size:.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Description</p>
+            <div class="field" style="margin-bottom:22px">
+              <textarea class="input" name="description" id="editDescription" rows="3" placeholder="A short compelling description shown on the car detail page…" style="resize:vertical;min-height:76px"></textarea>
+            </div>
+
+            <!-- Features -->
+            <p style="font-size:.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Special Features</p>
+            <div class="field" style="margin-bottom:8px">
+              <label class="label">Comma-separated — shown as tags on detail page</label>
+              <input class="input" type="text" name="features" id="editFeatures" placeholder="Apple CarPlay, Sunroof, Heated Seats, 360 Camera" oninput="updateFeatPreview(this.value)">
+            </div>
+            <div id="featPreview" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;min-height:0"></div>
+
+            <!-- Availability -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--bg3);border-radius:var(--r-md)">
+              <div>
+                <p style="font-weight:600;font-size:.9375rem;color:var(--ink)">Fleet Visibility</p>
+                <p style="font-size:.8125rem;color:var(--muted);margin-top:2px">Show this car on the customer fleet page</p>
+              </div>
+              <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none">
+                <span id="availLabel" style="font-size:.875rem;color:var(--muted)">Available</span>
+                <div id="availTrack" onclick="toggleAvail()" style="width:44px;height:24px;border-radius:12px;background:var(--border2);cursor:pointer;transition:background .2s;display:flex;align-items:center;padding:2px 3px">
+                  <div id="availThumb" style="width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)"></div>
+                </div>
+                <input type="hidden" name="available" id="editAvailable" value="1">
+              </label>
+            </div>
+
+          </div>
+          <div style="padding:18px 32px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3)">
+            <button type="button" onclick="closeEditModal()" class="btn btn-ghost">Cancel</button>
+            <button type="submit" class="btn btn-accent">Save &amp; Republish →</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Add vehicle -->
+    <div class="admin-panel">
+      <div class="admin-panel__head">
+        <span class="admin-panel__title">Add New Vehicle</span>
+      </div>
+      <div class="admin-panel__body">
+        <form method="POST" action="/add_car">
+          <div class="add-grid">
+            <div class="field"><label class="label">Brand</label><input class="input" type="text" name="brand" placeholder="e.g. BMW" required></div>
+            <div class="field"><label class="label">Model</label><input class="input" type="text" name="model" placeholder="e.g. M6 Gran Coupe" required></div>
+            <div class="field"><label class="label">Year</label><input class="input" type="number" name="year" placeholder="2024" min="1990" max="2030"></div>
+            <div class="field"><label class="label">Price Per Day (₹)</label><input class="input" type="number" name="price" placeholder="4500" min="1" required></div>
+            <div class="field"><label class="label">Category</label>
+              <select class="select" name="category_id">
+                <option value="">— Select —</option>
+                {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="field"><label class="label">Color</label><input class="input" type="text" name="color" placeholder="Pearl White"></div>
+            <div class="field"><label class="label">Transmission</label>
+              <select class="select" name="transmission"><option>Automatic</option><option>Manual</option><option>Semi-Automatic</option></select>
+            </div>
+            <div class="field"><label class="label">Fuel Type</label>
+              <select class="select" name="fuel_type"><option>Petrol</option><option>Diesel</option><option>Electric</option><option>Hybrid</option><option>CNG</option></select>
+            </div>
+            <div class="field col2"><label class="label">Image Filename</label><input class="input" type="text" name="image" placeholder="bmwm6.jpg (must be in static/images/)"></div>
+            <div class="col2 mt3"><button type="submit" class="btn btn-accent">Add Vehicle →</button></div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Vehicles list -->
+    <div class="admin-panel">
+      <div class="admin-panel__head">
+        <span class="admin-panel__title">Fleet</span>
+        <span style="font-size:.8rem;color:var(--muted)">{{ total_cars }} vehicles</span>
+      </div>
+      <div style="overflow-x:auto">
+        {% if cars %}
+        <table>
+          <thead><tr><th>Preview</th><th>Brand</th><th>Model</th><th>Year</th><th>Category</th><th>Price/Day</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for car in cars %}
+            <tr>
+              <td>
+                <div style="width:64px;height:42px;border-radius:6px;overflow:hidden;border:1px solid var(--border);background:var(--bg3)">
+                  <img src="{{ url_for('static', filename='images/' + (car.image if car.image else 'default-car.jpg')) }}" alt="" style="width:100%;height:100%;object-fit:cover">
+                </div>
+              </td>
+              <td style="font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)">{{ car.brand }}</td>
+              <td style="font-family:var(--font-d);font-weight:700;color:var(--ink)">{{ car.model }}</td>
+              <td style="font-size:.8125rem;color:var(--muted)">{{ car.year or '—' }}</td>
+              <td style="font-size:.8125rem;color:var(--muted)">{{ car.category or '—' }}</td>
+              <td style="font-weight:600;color:var(--ink)">₹{{ car.price_per_day }}</td>
+              <td>
+                {% if car.available %}<span class="badge badge-confirmed">Available</span>
+                {% else %}<span class="badge badge-pending">Unavailable</span>{% endif %}
+              </td>
+              <td>
+                <div class="flex" style="gap:6px;justify-content:flex-end">
+                  <button class="btn btn-accent btn-sm"
+                    onclick="openEditModal({{ car.id }}, '{{ car.brand }}', '{{ car.model }}', '{{ car.year or '' }}', {{ car.price_per_day }}, '{{ car.category_id or '' }}', '{{ car.image or '' }}', '{{ car.gallery or '' }}', {{ car.seats or 5 }}, '{{ car.transmission or 'Automatic' }}', '{{ car.fuel_type or 'Petrol' }}', '{{ car.color or '' }}', '{{ car.mileage or 'Unlimited' }}', {{ car.available }}, `{{ car.description or '' }}`, `{{ car.features or '' }}`)">
+                    Edit
+                  </button>
+                  <a href="/delete_car/{{ car.id }}" class="btn btn-danger btn-sm"
+                     onclick="return confirm('Remove {{ car.brand }} {{ car.model }}?')">Remove</a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p style="padding:28px 20px;color:var(--muted);font-size:.875rem">No vehicles yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Bookings -->
+    <div class="admin-panel">
+      <div class="admin-panel__head">
+        <span class="admin-panel__title">All Bookings</span>
+        <span style="font-size:.8rem;color:var(--muted)">{{ total_bookings }} total</span>
+      </div>
+      <div style="overflow-x:auto">
+        {% if bookings %}
+        <table>
+          <thead><tr><th>Customer</th><th>Vehicle</th><th>Pickup</th><th>Return</th><th>Total</th><th>Status</th><th>Payment</th><th></th></tr></thead>
+          <tbody>
+            {% for b in bookings %}
+            <tr>
+              <td style="font-weight:600;color:var(--ink)">{{ b.name }}</td>
+              <td>{{ b.brand }} {{ b.model }}</td>
+              <td style="font-size:.8125rem">{{ b.pickup_date }}</td>
+              <td style="font-size:.8125rem">{{ b.return_date }}</td>
+              <td class="td-total">₹{{ "{:,.0f}".format(b.total|float) }}</td>
+              <td>
+                {% if b.status in ['confirmed','paid'] %}<span class="badge badge-confirmed">{{ b.status|title }}</span>
+                {% elif b.status == 'completed' %}<span class="badge badge-completed">Completed</span>
+                {% elif b.status == 'cancelled' %}<span class="badge badge-cancelled">Cancelled</span>
+                {% else %}<span class="badge badge-pending">Pending</span>{% endif %}
+              </td>
+              <td style="font-size:.8125rem;color:var(--muted);text-transform:capitalize">{{ b.payment_method or '—' }}</td>
+              <td>
+                <div class="flex" style="gap:5px;justify-content:flex-end">
+                  {% if b.status == 'pending' %}
+                    <a href="/update_status/{{ b.id }}/confirmed" class="btn btn-accent btn-sm">Approve</a>
+                  {% endif %}
+                  {% if b.status not in ['completed','cancelled'] %}
+                    <a href="/update_status/{{ b.id }}/completed" class="btn btn-ghost btn-sm">Complete</a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p style="padding:28px 20px;color:var(--muted);font-size:.875rem">No bookings yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Customers -->
+    <div class="admin-panel">
+      <div class="admin-panel__head">
+        <span class="admin-panel__title">Registered Customers</span>
+        <span style="font-size:.8rem;color:var(--muted)">{{ total_customers }} members</span>
+      </div>
+      <div style="overflow-x:auto">
+        {% if customers %}
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Bookings</th><th>Total Spent</th></tr></thead>
+          <tbody>
+            {% for c in customers %}
+            <tr>
+              <td style="font-weight:600;color:var(--ink)">{{ c.name }}</td>
+              <td style="font-size:.875rem;color:var(--muted)">{{ c.email }}</td>
+              <td style="font-size:.875rem;color:var(--muted)">{{ c.phone or '—' }}</td>
+              <td style="font-weight:600">{{ c.booking_count or 0 }}</td>
+              <td class="td-total">₹{{ "{:,.0f}".format(c.total_spent|float) if c.total_spent else '0' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p style="padding:28px 20px;color:var(--muted);font-size:.875rem">No customers yet.</p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer"><div class="page"><div class="footer__inner">
+  <span class="footer__logo">Elite <em>Auto</em></span>
+  <span class="footer__copy">© 2025 Elite Auto Rentals — Admin Panel</span>
+</div></div></footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+const STATIC_BASE = "{{ url_for('static', filename='images/') }}";
+let availState = 1;
+
+function openEditModal(id, brand, model, year, price, catId, image, gallery, seats, transmission, fuelType, color, mileage, available, description, features) {
+  document.getElementById('editCarForm').action = '/edit_car/' + id;
+  document.getElementById('modalCarTitle').textContent = brand + ' ' + model;
+  document.getElementById('editBrand').value = brand;
+  document.getElementById('editModel').value = model;
+  document.getElementById('editYear').value = year;
+  document.getElementById('editPrice').value = price;
+  document.getElementById('editColor').value = color;
+  document.getElementById('editDescription').value = description;
+  document.getElementById('editFeatures').value = features;
+  document.getElementById('editImage').value = image;
+  document.getElementById('editGallery').value = gallery;
+
+  // Category
+  const catSel = document.getElementById('editCategory');
+  for (let o of catSel.options) o.selected = (o.value == catId);
+
+  // Seats
+  const seatSel = document.getElementById('editSeats');
+  for (let o of seatSel.options) o.selected = (o.value == seats);
+
+  // Transmission
+  const trSel = document.getElementById('editTransmission');
+  for (let o of trSel.options) o.selected = (o.text === transmission);
+
+  // Fuel
+  const fuSel = document.getElementById('editFuelType');
+  for (let o of fuSel.options) o.selected = (o.text === fuelType);
+
+  // Mileage
+  const miSel = document.getElementById('editMileage');
+  for (let o of miSel.options) o.selected = (o.text === mileage);
+
+  // Availability toggle
+  availState = available ? 1 : 0;
+  syncAvailUI();
+
+  // Previews
+  updateCoverPreview(image);
+  updateGallery(gallery);
+  updateFeatPreview(features);
+
+  document.getElementById('editModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function updateCoverPreview(filename) {
+  const img = document.getElementById('coverPreview');
+  img.src = filename ? STATIC_BASE + filename : '';
+  img.onerror = function() { this.src = STATIC_BASE + 'default-car.jpg'; };
+}
+
+function updateGallery(val) {
+  const container = document.getElementById('galleryPreviews');
+  const files = val.split(',').map(s => s.trim()).filter(Boolean);
+  container.innerHTML = '';
+  files.forEach(f => {
+    const img = document.createElement('img');
+    img.src = STATIC_BASE + f;
+    img.onerror = function() { this.style.display = 'none'; };
+    img.style.cssText = 'width:72px;height:48px;object-fit:cover;border-radius:6px;border:1.5px solid var(--border);background:var(--bg3)';
+    container.appendChild(img);
+  });
+}
+
+function updateFeatPreview(val) {
+  const container = document.getElementById('featPreview');
+  const items = val.split(',').map(s => s.trim()).filter(Boolean);
+  container.innerHTML = '';
+  items.forEach(f => {
+    const span = document.createElement('span');
+    span.textContent = f;
+    span.style.cssText = 'font-size:.75rem;font-weight:500;padding:3px 10px;border-radius:99px;background:var(--red-bg);color:var(--accent);border:1px solid rgba(193,59,27,.15)';
+    container.appendChild(span);
+  });
+}
+
+function toggleAvail() {
+  availState = availState ? 0 : 1;
+  document.getElementById('editAvailable').value = availState;
+  syncAvailUI();
+}
+
+function syncAvailUI() {
+  const track = document.getElementById('availTrack');
+  const thumb = document.getElementById('availThumb');
+  const label = document.getElementById('availLabel');
+  if (availState) {
+    track.style.background = 'var(--accent)';
+    thumb.style.transform = 'translateX(20px)';
+    label.textContent = 'Available';
+    label.style.color = 'var(--accent)';
+  } else {
+    track.style.background = 'var(--border2)';
+    thumb.style.transform = 'translateX(0)';
+    label.textContent = 'Unavailable';
+    label.style.color = 'var(--muted)';
+  }
+}
+
+// Close modal on backdrop click
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) closeEditModal();
+});
+</script>
+</body>
+</html>

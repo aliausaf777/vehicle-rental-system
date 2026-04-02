@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/generated-image-removebg-preview.png') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book — {{ car.brand }} {{ car.model }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<nav class="nav scrolled" id="nav">
+  <div class="nav__inner">
+    <a href="/" class="nav__logo">Elite <span>Auto</span></a>
+    <div class="nav__links">
+      <a href="/">Fleet</a>
+      <a href="/bookings">My Bookings</a>
+      <a href="/logout" class="nav-danger">Sign Out</a>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="flash flash--error" style="padding-left: 48px;">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div style="background: var(--bg2);">
+  <div class="page">
+    <div class="pg-header" style="background: transparent;">
+      <p class="pg-eyebrow">Reserve Your Vehicle</p>
+      <h1>{{ car.brand }} <span>{{ car.model }}</span></h1>
+    </div>
+  </div>
+</div>
+
+<div class="page" style="background: var(--bg);">
+  <div class="book-layout">
+
+    <!-- Car info (sticky) -->
+    <div>
+      <div class="book-car-card">
+        <img src="{{ url_for('static', filename='images/' + (car.image if car.image else 'default-car.jpg')) }}"
+             alt="{{ car.brand }} {{ car.model }}">
+        <div class="book-car-card__info">
+          <p class="book-car-card__make">{{ car.brand }}</p>
+          <p class="book-car-card__name">{{ car.model }}</p>
+
+          <div class="book-rate-box">
+            <p class="book-rate">₹{{ car.price_per_day }}<sub> / day</sub></p>
+            <p style="font-size: 0.8125rem; color: var(--muted); margin-top: 4px;">GST included · No hidden fees</p>
+          </div>
+
+          <div class="book-features">
+            <div class="book-feature">Comprehensive insurance included</div>
+            <div class="book-feature">24/7 roadside assistance</div>
+            <div class="book-feature">Free depot pickup &amp; return</div>
+            <div class="book-feature">Full tank on departure</div>
+            <div class="book-feature">Valid driving licence required</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking form -->
+    <div>
+      <div class="book-form-card">
+        <h2>Select Your Dates</h2>
+
+        <form method="POST" id="bookForm">
+
+          <div class="form-field">
+            <label class="form-label" for="pickup">Pickup date</label>
+            <input class="form-input" type="date" id="pickup" name="pickup" required>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label" for="return">Return date</label>
+            <input class="form-input" type="date" id="return" name="return" required>
+          </div>
+
+          <div class="price-summary" id="priceSummary">
+            <div class="price-row">
+              <span id="daysLabel">—</span>
+              <span id="basePrice">—</span>
+            </div>
+            <div class="price-row">
+              <span>Insurance &amp; taxes</span>
+              <span style="color: #166534; font-weight: 600;">Included ✓</span>
+            </div>
+            <div class="price-row total">
+              <span>Total</span>
+              <span id="totalPrice">—</span>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn--accent btn--full btn--lg"
+                    id="submitBtn" disabled style="opacity: 0.5; cursor: not-allowed;">
+              Proceed to Payment →
+            </button>
+          </div>
+          <div class="mt-3" style="text-align: center;">
+            <a href="/" class="btn btn--ghost btn--sm">← Back to fleet</a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const rate     = {{ car.price_per_day }};
+  const pickup   = document.getElementById('pickup');
+  const ret      = document.getElementById('return');
+  const summary  = document.getElementById('priceSummary');
+  const daysLbl  = document.getElementById('daysLabel');
+  const basePrc  = document.getElementById('basePrice');
+  const totalPrc = document.getElementById('totalPrice');
+  const submitBtn= document.getElementById('submitBtn');
+  const today    = new Date().toISOString().split('T')[0];
+
+  pickup.min = today;
+  ret.min    = today;
+
+  pickup.addEventListener('change', () => { if (pickup.value) ret.min = pickup.value; calc(); });
+  ret.addEventListener('change', calc);
+
+  function fmt(n) { return '₹' + n.toLocaleString('en-IN'); }
+
+  function calc() {
+    if (!pickup.value || !ret.value) {
+      summary.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.5';
+      submitBtn.style.cursor = 'not-allowed';
+      return;
+    }
+    const d = Math.floor((new Date(ret.value) - new Date(pickup.value)) / 86400000) + 1;
+    if (d < 1) {
+      summary.style.display = 'none';
+      submitBtn.disabled = true;
+      return;
+    }
+    const total = d * rate;
+    daysLbl.textContent  = d + ' day' + (d > 1 ? 's' : '') + ' × ' + fmt(rate);
+    basePrc.textContent  = fmt(total);
+    totalPrc.textContent = fmt(total);
+    summary.style.display = 'block';
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = '1';
+    submitBtn.style.cursor = 'pointer';
+  }
+</script>
+
+</body>
+</html>

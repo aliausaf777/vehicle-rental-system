@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/generated-image-removebg-preview.png') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookings — Elite Auto Rentals</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<nav class="nav scrolled" id="main-nav">
+  <div class="nav__inner">
+    <a href="/" class="nav__logo">Elite <em>Auto</em></a>
+    <div class="nav__links">
+      <a href="/">Fleet</a>
+      <a href="/bookings" class="active">Bookings</a>
+      <a href="/profile" class="flex" style="gap:7px">
+        <div class="nav__avatar">{{ session.get('name','U')[0]|upper }}</div>
+      </a>
+      <a href="/logout" class="danger">Sign Out</a>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}<div class="flash-wrap">{% for m in messages %}
+    <div class="flash success" style="padding-left:48px">{{ m }}</div>
+  {% endfor %}</div>{% endif %}
+{% endwith %}
+
+<!-- Cancel modal -->
+<div class="modal-bg" id="cancelModal">
+  <div class="modal">
+    <h3>Cancel Booking?</h3>
+    <p>Are you sure you want to cancel this booking? This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('cancelModal')">Keep Booking</button>
+      <a class="btn btn-danger" id="cancelConfirmBtn" href="#">Yes, Cancel</a>
+    </div>
+  </div>
+</div>
+
+<div style="background:var(--bg2)">
+  <div class="page">
+    <div class="pg-header" style="background:transparent">
+      <p class="pg-eye">Account</p>
+      <h1>My <span>Bookings</span></h1>
+      <p class="pg-sub">{{ bookings|length }} total reservation{{ 's' if bookings|length != 1 else '' }}</p>
+    </div>
+  </div>
+</div>
+
+<div style="background:var(--bg);min-height:55vh">
+  <div class="page" style="padding-bottom:84px">
+
+    {% if bookings %}
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vehicle</th>
+            <th>Pickup</th>
+            <th>Return</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Payment</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in bookings %}
+          <tr>
+            <td class="td-car">
+              <p>{{ b.brand }}</p>
+              <p>{{ b.model }}</p>
+            </td>
+            <td>{{ b.pickup_date }}</td>
+            <td>{{ b.return_date }}</td>
+            <td class="td-total">₹{{ "{:,.0f}".format(b.total|float) }}</td>
+            <td>
+              {% if b.status == 'confirmed' %}<span class="badge badge-confirmed">Confirmed</span>
+              {% elif b.status == 'paid' %}<span class="badge badge-paid">Paid</span>
+              {% elif b.status == 'completed' %}<span class="badge badge-completed">Completed</span>
+              {% elif b.status == 'cancelled' %}<span class="badge badge-cancelled">Cancelled</span>
+              {% else %}<span class="badge badge-pending">Pending</span>{% endif %}
+            </td>
+            <td style="font-size:.8125rem;color:var(--muted);text-transform:capitalize">
+              {{ b.payment_method or '—' }}
+            </td>
+            <td>
+              <div class="flex" style="gap:6px;justify-content:flex-end">
+                {% if b.status == 'pending' %}
+                  <a href="/payment/{{ b.id }}" class="btn btn-accent btn-sm">Pay Now →</a>
+                  <button class="btn btn-danger btn-sm"
+                    onclick="document.getElementById('cancelConfirmBtn').href='/cancel_booking/{{ b.id }}';openModal('cancelModal')">
+                    Cancel
+                  </button>
+                {% elif b.status == 'confirmed' %}
+                  <a href="/confirmation/{{ b.id }}" class="btn btn-ghost btn-sm">View Receipt</a>
+                {% else %}
+                  <span style="font-size:.8125rem;color:var(--muted2)">—</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <div class="empty" style="margin-top:40px">
+      <div class="empty-icon">🚗</div>
+      <h3>No bookings yet</h3>
+      <p>Browse our fleet and make your first reservation.</p>
+      <a href="/" class="btn btn-accent">Browse Fleet →</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<footer class="footer"><div class="page"><div class="footer__inner">
+  <span class="footer__logo">Elite <em>Auto</em></span>
+  <div class="footer__links"><a href="/">Fleet</a><a href="/bookings">Bookings</a><a href="/profile">Profile</a></div>
+  <span class="footer__copy">© 2025 Elite Auto Rentals</span>
+</div></div></footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

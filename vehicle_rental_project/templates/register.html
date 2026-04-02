@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/generated-image-removebg-preview.png') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account — Elite Auto Rentals</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<div class="auth-wrap">
+
+  <div class="auth-side">
+    <div class="auth-side__grid"></div>
+    <div class="auth-side__glow"></div>
+    <span class="auth-side__logo">Elite <em>Auto</em></span>
+    <div style="position:relative;z-index:1">
+      <h1 class="auth-side__hero">Join<br><em>Elite.</em></h1>
+      <p class="auth-side__tag">Create your account in 30 seconds.<br>Start booking premium vehicles today.</p>
+    </div>
+    <p class="auth-side__foot">© 2025 Elite Auto Rentals</p>
+  </div>
+
+  <div class="auth-form">
+    <div class="auth-inner">
+
+      <h2 class="auth-title">Create account</h2>
+      <p class="auth-sub">
+        Already have an account? <a href="/login">Sign in →</a>
+      </p>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}{% for msg in messages %}
+          <div class="flash error" style="margin-bottom:18px;border-radius:4px;padding:11px 14px;">{{ msg }}</div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+
+      <form method="POST" id="regForm" novalidate>
+        <div class="field">
+          <label class="label">Full Name</label>
+          <input class="input" type="text" name="name" id="fName" placeholder="Alex Sharma" required autocomplete="name">
+          <span class="hint" id="hName"></span>
+        </div>
+        <div class="field">
+          <label class="label">Email Address</label>
+          <input class="input" type="email" name="email" id="fEmail" placeholder="you@example.com" required autocomplete="email">
+          <span class="hint" id="hEmail"></span>
+        </div>
+        <div class="field">
+          <label class="label">Phone (optional)</label>
+          <input class="input" type="tel" name="phone" id="fPhone" placeholder="+91 98765 43210" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label class="label">Password</label>
+          <input class="input" type="password" name="password" id="fPass" placeholder="Min. 6 characters" required autocomplete="new-password">
+          <span class="hint" id="hPass"></span>
+        </div>
+        <div class="field">
+          <label class="label">Confirm Password</label>
+          <input class="input" type="password" name="confirm" id="fConfirm" placeholder="Repeat password" required>
+          <span class="hint" id="hConfirm"></span>
+        </div>
+
+        <div style="margin-top:24px">
+          <button type="submit" class="btn btn-accent btn-lg btn-full">Create Account →</button>
+        </div>
+        <p style="font-size:.75rem;color:var(--muted2);text-align:center;margin-top:12px;line-height:1.6;">
+          By signing up you agree to our Terms &amp; Privacy Policy.
+        </p>
+      </form>
+
+    </div>
+    <p class="auth-foot">Elite Auto Rentals · All rights reserved</p>
+  </div>
+
+</div>
+
+<script>
+function lv(inp, hint, test, msg) {
+  inp.addEventListener('input', () => {
+    if (!inp.value) { inp.className='input'; hint.textContent=''; return; }
+    if (test(inp.value)) { inp.className='input ok'; hint.className='hint ok'; hint.textContent='✓ Looks good'; }
+    else { inp.className='input bad'; hint.className='hint bad'; hint.textContent=msg; }
+  });
+}
+const fPass = document.getElementById('fPass');
+lv(document.getElementById('fName'), document.getElementById('hName'), v=>v.trim().length>=2, 'Enter your full name.');
+lv(document.getElementById('fEmail'), document.getElementById('hEmail'), v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'Enter a valid email.');
+lv(fPass, document.getElementById('hPass'), v=>v.length>=6, 'At least 6 characters required.');
+const fC=document.getElementById('fConfirm'), hC=document.getElementById('hConfirm');
+fC.addEventListener('input', ()=>{
+  if(!fC.value){fC.className='input';hC.textContent='';return;}
+  if(fC.value===fPass.value){fC.className='input ok';hC.className='hint ok';hC.textContent='✓ Passwords match';}
+  else{fC.className='input bad';hC.className='hint bad';hC.textContent='Passwords do not match.';}
+});
+</script>
+
+</body>
+</html>

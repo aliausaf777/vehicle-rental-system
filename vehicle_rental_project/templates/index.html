@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/generated-image-removebg-preview.png') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fleet — Elite Auto Rentals</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+<nav class="nav" id="main-nav">
+  <div class="nav__inner">
+    <a href="/" class="nav__logo">Elite <em>Auto</em></a>
+    <div class="nav__links">
+      <a href="/" class="active">Fleet</a>
+      <a href="/bookings">Bookings</a>
+      <a href="/profile" class="flex" style="gap:7px">
+        <div class="nav__avatar">{{ session.get('name','U')[0]|upper }}</div>
+        <span style="font-size:.8125rem;font-weight:500;color:var(--ink2)">{{ session.get('name','') }}</span>
+      </a>
+      <a href="/logout" class="danger">Sign Out</a>
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div class="flash-wrap">
+    {% for msg in messages %}
+    <div class="flash success" style="padding-left:48px">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero__bg"></div>
+  <div class="hero__grid"></div>
+  <div class="page hero__body">
+    <div style="max-width:640px">
+      <div class="hero__eye">Premium Fleet · Available Now</div>
+      <h1 class="hero__h1">Redefine<br><em>Every Drive.</em></h1>
+      <p class="hero__sub">Handpicked luxury and performance vehicles, available by the day. Transparent pricing. Zero surprises.</p>
+      <div class="hero__cta">
+        <a href="#fleet" class="btn btn-accent btn-lg">Browse Fleet</a>
+        <a href="/bookings" class="btn btn-outline btn-lg">My Bookings</a>
+      </div>
+      <div class="hero__stats">
+        <div><p class="hero__stat-n">{{ cars|length }}+</p><p class="hero__stat-l">Vehicles available</p></div>
+        <div><p class="hero__stat-n">24/7</p><p class="hero__stat-l">Customer support</p></div>
+        <div><p class="hero__stat-n">₹0</p><p class="hero__stat-l">Hidden charges</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FLEET -->
+<section class="fleet-section" id="fleet">
+  <div class="page">
+
+    <div class="section-hd">
+      <h2>Our <span>Fleet</span></h2>
+      <span class="section-count" id="carCount">{{ cars|length }} vehicles</span>
+    </div>
+
+    <!-- Smart Search Bar -->
+    <div class="search-bar">
+      <div class="sf" style="flex:2">
+        <label>Search by brand or model</label>
+        <input type="text" id="searchQ" placeholder="BMW, Tesla, Porsche…">
+      </div>
+      <div class="sf">
+        <label>Category</label>
+        <select id="filterCat">
+          <option value="">All Categories</option>
+          {% for cat in categories %}<option value="{{ cat.name }}">{{ cat.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="sf">
+        <label>Max Price / Day</label>
+        <select id="filterPrice">
+          <option value="">Any Price</option>
+          <option value="3000">Under ₹3,000</option>
+          <option value="4500">Under ₹4,500</option>
+          <option value="6000">Under ₹6,000</option>
+          <option value="8000">Under ₹8,000</option>
+        </select>
+      </div>
+      <div class="sf" style="flex:0">
+        <label>&nbsp;</label>
+        <button class="btn btn-ghost" onclick="clearFilters()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="fleet-grid" id="fleetGrid">
+      {% for car in cars %}
+      <div class="car-card"
+           data-name="{{ car.brand }} {{ car.model }}"
+           data-cat="{{ car.category or '' }}"
+           data-price="{{ car.price_per_day }}"
+           onclick="window.location='/car/{{ car.id }}'">
+        <div class="cc-img">
+          <img src="{{ url_for('static', filename='images/' + (car.image if car.image else 'default-car.jpg')) }}"
+               alt="{{ car.brand }} {{ car.model }}" loading="lazy">
+          <span class="cc-pill avail">Available</span>
+          {% if car.category %}<span class="cc-pill cat">{{ car.category }}</span>{% endif %}
+        </div>
+        <div class="cc-body">
+          <p class="cc-make">{{ car.brand }}</p>
+          <p class="cc-model">{{ car.model }}</p>
+          <div class="cc-specs">
+            <div class="cc-spec"><span class="cc-val">Daily</span><span class="cc-key">Rental</span></div>
+            <div class="cc-spec"><span class="cc-val">Insured</span><span class="cc-key">Coverage</span></div>
+            <div class="cc-spec"><span class="cc-val">Free</span><span class="cc-key">Pickup</span></div>
+          </div>
+        </div>
+        <div class="cc-foot">
+          <div class="cc-price"><strong>₹{{ car.price_per_day }}</strong> /day</div>
+          <a class="btn btn-accent btn-sm" href="/car/{{ car.id }}" onclick="event.stopPropagation()">View & Book</a>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty" style="grid-column:1/-1">
+        <div class="empty-icon">🚗</div><h3>No vehicles available</h3><p>Our fleet is being updated.</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div id="noResults" class="empty" style="display:none">
+      <div class="empty-icon">🔍</div><h3>No results found</h3>
+      <p>Try adjusting your search or filters.</p>
+      <button class="btn btn-ghost" onclick="clearFilters()">Clear Filters</button>
+    </div>
+
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="why-section">
+  <div class="page">
+    <div class="section-hd" style="margin-bottom:24px"><h2>Why <span>Elite Auto</span></h2></div>
+    <div class="why-grid">
+      <div class="why-item"><div class="why-icon">🛡️</div><p class="why-title">Fully Insured</p><p class="why-desc">Every vehicle covered. Drive with total peace of mind.</p></div>
+      <div class="why-item"><div class="why-icon">🔑</div><p class="why-title">Instant Booking</p><p class="why-desc">Confirm your rental in under 2 minutes.</p></div>
+      <div class="why-item"><div class="why-icon">🚘</div><p class="why-title">Premium Fleet</p><p class="why-desc">Only the finest vehicles, maintained to perfection.</p></div>
+      <div class="why-item"><div class="why-icon">💬</div><p class="why-title">24/7 Support</p><p class="why-desc">Our team is always on call for you.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer"><div class="page"><div class="footer__inner">
+  <span class="footer__logo">Elite <em>Auto</em></span>
+  <div class="footer__links"><a href="/">Fleet</a><a href="/bookings">Bookings</a><a href="/profile">Profile</a></div>
+  <span class="footer__copy">© 2025 Elite Auto Rentals</span>
+</div></div></footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+const cards = document.querySelectorAll('.car-card');
+const noRes = document.getElementById('noResults');
+const cntEl = document.getElementById('carCount');
+function filterCards() {
+  const q = document.getElementById('searchQ').value.toLowerCase();
+  const cat = document.getElementById('filterCat').value;
+  const maxP = parseFloat(document.getElementById('filterPrice').value) || Infinity;
+  let n = 0;
+  cards.forEach(c => {
+    const ok = c.dataset.name.toLowerCase().includes(q) &&
+               (!cat || c.dataset.cat === cat) &&
+               parseFloat(c.dataset.price) <= maxP;
+    c.classList.toggle('hidden', !ok);
+    if (ok) n++;
+  });
+  cntEl.textContent = n + ' vehicle' + (n !== 1 ? 's' : '');
+  noRes.style.display = n === 0 ? 'block' : 'none';
+}
+function clearFilters() {
+  document.getElementById('searchQ').value = '';
+  document.getElementById('filterCat').value = '';
+  document.getElementById('filterPrice').value = '';
+  filterCards();
+}
+document.getElementById('searchQ').addEventListener('input', filterCards);
+document.getElementById('filterCat').addEventListener('change', filterCards);
+document.getElementById('filterPrice').addEventListener('change', filterCards);
+</script>
+
+</body>
+</html>
